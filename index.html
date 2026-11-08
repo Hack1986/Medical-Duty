@@ -361,6 +361,9 @@ input,select,textarea{font-size:16px!important}
 .instHelp[hidden]{display:none}
 .instHelp div{background:#fff;border-radius:16px;padding:18px;max-width:340px;font-size:14px;line-height:1.6}
 .instHelp button{margin-top:10px;width:100%;padding:10px;border-radius:10px;background:#23497e;color:#fff;font-weight:600;border:0}
+/* v1.18 วันนี้: ไม่ใช้กรอบสีส้ม ใช้วงกลมน้ำเงินที่เลขวันแทน */
+.cell.today{outline:0!important;background:var(--surface);box-shadow:var(--shadow,none)!important}
+.cell.today .num{display:inline-block;min-width:20px;padding:0 5px;border-radius:10px;background:#23497e;color:#fff!important;text-align:center;font-weight:700}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#23497e">
@@ -730,6 +733,7 @@ let opt={showPay:true,showOT:true,hdBorder:true,quick:true,hCal:true,calInfo:nul
 try{const sv=JSON.parse(localStorage.getItem('dutyOpt')||'{}');Object.assign(opt,sv);if(sv.icsT&&!sv.pats)opt.pats[2]=sv.icsT}catch(e){}
 if(!opt.pats[3])opt.pats[3]={m:['08:00','16:00'],e:['16:00','00:00'],n:['00:00','08:00']};
 if(!opt.tpMig){opt.timePat=1;opt.tpMig=1}
+if(!opt.tpMig2){opt.timePat=1;opt.monthPat={};opt.tpMig2=1;try{localStorage.setItem('dutyOpt',JSON.stringify(opt))}catch(e){}}
 if(![1,2,3].includes(opt.timePat))opt.timePat=1;
 const patName=n=>n===3?'แบบ 3 · กำหนดเอง':'แบบ '+n;
 const tpOf=(k,r)=>(r&&r.tp)||opt.monthPat[k.slice(0,7)]||opt.timePat;
