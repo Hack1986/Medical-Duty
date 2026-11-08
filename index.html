@@ -548,7 +548,7 @@ function drawSheet(){
   $('opts').innerHTML=Object.entries(SH).map(([k,v])=>`<button data-s="${k}" class="${sel===k?'sel':''}" style="background:${v.c};${v.t?'color:'+v.t:''}">${k}<small>${v.d}</small></button>`).join('')+`<button data-s="" style="background:#6b7c7a">ลบเวร</button>`;
   $('stks').innerHTML=`<button class="none${stk?'':' sel'}" data-e="">ไม่มี</button>`+ST.map(([e,a])=>`<button data-e="${e}" class="${stk===e?'sel':''}"><span class="a-${a}" style="display:inline-block">${e}</span></button>`).join('');
   const hn=HOLI[pick]?`(${HOLI[pick]})`:'';$('hdInfo').textContent=hn;
-  $('tpSeg').innerHTML=[[0,'ตามเดือน/ค่าหลัก (แบบ '+tpOf(pick,null)+')'],[1,'แบบ 1'],[2,'แบบ 2']].map(([v,l])=>`<button class="sg${tp===v?' sel':''}" data-t="${v}">${l}</button>`).join('');
+  $('tpSeg').innerHTML=[[0,'ตามเดือน/ค่าหลัก ('+patName(tpOf(pick,null))+')'],[1,'แบบ 1'],[2,'แบบ 2'],[3,'แบบ 3 · กำหนดเอง']].map(([v,l])=>`<button class="sg${tp===v?' sel':''}" data-t="${v}">${l}</button>`).join('');
   $('hdSeg').innerHTML=[[0,'อัตโนมัติ'],[1,'วันหยุด'],[2,'วันปกติ']].map(([v,l])=>`<button class="sg${hd===v?' sel':''}" data-h="${v}">${l}</button>`).join('');
   $('hls').innerHTML=HL.map((c,i)=>`<button data-i="${i}" class="${hl===i?'sel':''}" style="background:${c||'transparent'}" aria-label="ไฮไลต์ ${i}">${i?'':'✕'}</button>`).join('');
 }
@@ -669,8 +669,12 @@ const saveRates=()=>{try{localStorage.setItem('dutyRates',JSON.stringify(rates))
 const rn=k=>parseFloat(rates[k])||0;
 const fm=x=>x.toLocaleString('en-US',{maximumFractionDigits:2});
 const HOLI={"2026-01-01":"วันขึ้นปีใหม่","2026-01-02":"วันหยุดพิเศษ","2026-03-03":"วันมาฆบูชา","2026-04-06":"วันจักรี","2026-04-13":"วันสงกรานต์","2026-04-14":"วันสงกรานต์","2026-04-15":"วันสงกรานต์","2026-05-04":"วันฉัตรมงคล","2026-05-09":"วันพืชมงคล","2026-05-31":"วันวิสาขบูชา","2026-06-01":"ชดเชยวันวิสาขบูชา","2026-06-03":"วันพระราชินี","2026-07-28":"วันเฉลิมพระชนมพรรษา ร.10","2026-07-29":"วันอาสาฬหบูชา","2026-07-30":"วันเข้าพรรษา","2026-08-12":"วันแม่แห่งชาติ","2026-10-13":"วันคล้ายวันสวรรคต ร.9","2026-10-23":"วันปิยมหาราช","2026-12-05":"วันพ่อแห่งชาติ","2026-12-07":"ชดเชยวันพ่อแห่งชาติ","2026-12-10":"วันรัฐธรรมนูญ","2026-12-31":"วันสิ้นปี","2027-01-01":"วันขึ้นปีใหม่","2027-02-21":"วันมาฆบูชา","2027-02-22":"ชดเชยวันมาฆบูชา","2027-04-06":"วันจักรี","2027-04-13":"วันสงกรานต์","2027-04-14":"วันสงกรานต์","2027-04-15":"วันสงกรานต์","2027-05-01":"วันแรงงานแห่งชาติ","2027-05-03":"ชดเชยวันแรงงาน","2027-05-04":"วันฉัตรมงคล","2027-05-20":"วันวิสาขบูชา","2027-06-03":"วันพระราชินี","2027-07-18":"วันอาสาฬหบูชา","2027-07-19":"วันเข้าพรรษา","2027-07-28":"วันเฉลิมพระชนมพรรษา ร.10","2027-08-12":"วันแม่แห่งชาติ","2027-10-13":"วันคล้ายวันสวรรคต ร.9","2027-10-23":"วันปิยมหาราช","2027-10-25":"ชดเชยวันปิยมหาราช","2027-12-05":"วันพ่อแห่งชาติ","2027-12-06":"ชดเชยวันพ่อแห่งชาติ","2027-12-10":"วันรัฐธรรมนูญ","2027-12-31":"วันสิ้นปี"};
-let opt={showPay:true,showOT:true,wkHd:false,shareName:'',lastBackup:0,pats:{1:{m:['07:00','15:00'],e:['15:00','23:00'],n:['23:00','07:00']},2:{m:['08:00','16:00'],e:['16:00','00:00'],n:['00:00','08:00']}},timePat:2,monthPat:{},icsAl:60,icsOff:true,minRest:8,maxRun:6,slip:{},nudgeUntil:0};
+let opt={showPay:true,showOT:true,wkHd:false,shareName:'',lastBackup:0,pats:{1:{m:['07:00','15:00'],e:['15:00','23:00'],n:['23:00','07:00']},2:{m:['08:00','16:00'],e:['16:00','00:00'],n:['00:00','08:00']},3:{m:['08:00','16:00'],e:['16:00','00:00'],n:['00:00','08:00']}},timePat:1,monthPat:{},icsAl:60,icsOff:true,minRest:8,maxRun:6,slip:{},nudgeUntil:0};
 try{const sv=JSON.parse(localStorage.getItem('dutyOpt')||'{}');Object.assign(opt,sv);if(sv.icsT&&!sv.pats)opt.pats[2]=sv.icsT}catch(e){}
+if(!opt.pats[3])opt.pats[3]={m:['08:00','16:00'],e:['16:00','00:00'],n:['00:00','08:00']};
+if(!opt.tpMig){opt.timePat=1;opt.tpMig=1}
+if(![1,2,3].includes(opt.timePat))opt.timePat=1;
+const patName=n=>n===3?'แบบ 3 · กำหนดเอง':'แบบ '+n;
 const tpOf=(k,r)=>(r&&r.tp)||opt.monthPat[k.slice(0,7)]||opt.timePat;
 function ptimes(k,r,p){const [a,b]=opt.pats[tpOf(k,r)][p];return{a,b,sh:(p==='n'&&a==='00:00')?1:0,ed:b<=a?1:0}}
 function patText(n){const q=opt.pats[n],f=(t,x)=>t==='00:00'&&x?'24:00':t;return `เช้า ${q.m[0]}-${q.m[1]} · บ่าย ${q.e[0]}-${f(q.e[1],1)} · ดึก ${f(q.n[0],1)}-${q.n[1]}`}
@@ -687,9 +691,9 @@ function calcPay(y,m){y=y??cur.getFullYear();m=m??cur.getMonth();const days=new 
   if(x.kd&&r.swt!=='gave')c[(x.hol?'h':'')+x.kd]++;
   const h=x.hol?'h':'';c[h+'om']+=r.otm||0;c[h+'oe']+=r.ote||0;c[h+'on']+=r.otn||0}
  return{c,sp,op}}
-function drawTpMonth(){const ym=mKey(),v=opt.monthPat[ym]||0;$('tpTx').textContent='('+patText(opt.monthPat[ym]||opt.timePat)+')';
- $('tpMonth').innerHTML=[[0,'ตามค่าหลัก (แบบ '+opt.timePat+')'],[1,'แบบ 1 · 07-15'],[2,'แบบ 2 · 08-16']].map(([n,l])=>`<button class="sg${v===n?' sel':''}" data-n="${n}">${l}</button>`).join('')}
-$('tpMonth').onclick=e=>{const b=e.target.closest('button');if(!b)return;const n=+b.dataset.n;if(n)opt.monthPat[mKey()]=n;else delete opt.monthPat[mKey()];saveOpt();render()};
+function drawTpMonth(){const ym=mKey(),v=opt.monthPat[ym]||opt.timePat;$('tpTx').textContent='('+patText(opt.monthPat[ym]||opt.timePat)+')';
+ $('tpMonth').innerHTML=[[1,'แบบ 1'],[2,'แบบ 2'],[3,'แบบ 3 · กำหนดเอง']].map(([n,l])=>`<button class="sg${v===n?' sel':''}" data-n="${n}">${l}</button>`).join('')}
+$('tpMonth').onclick=e=>{const b=e.target.closest('button');if(!b)return;const n=+b.dataset.n;if(n)opt.monthPat[mKey()]=n;saveOpt();render()};
 function updPay(){drawTpMonth();const p=calcPay(),el=$('pay');el.style.display=opt.showPay?'':'none';
  el.textContent=opt.showOT?`รวมเดือนนี้ ${fm(p.sp+p.op)} บาท · เวร ${fm(p.sp)} · OT ${fm(p.op)}`:`รวมเงินเวรเดือนนี้ ${fm(p.sp)} บาท`;
  $('tgPay').textContent=opt.showPay?'💰 แสดงเงินเวร: เปิด':'💰 แสดงเงินเวร: ปิด';$('tgPay').classList.toggle('sel',opt.showPay);
@@ -832,7 +836,7 @@ $('bkPaste').onclick=()=>showTxt('paste','');
 const markBk=()=>{opt.lastBackup=Date.now();saveOpt();drawData()};
 function drawData(){const t=opt.lastBackup;$('lastBk').textContent='สำรองล่าสุด: '+(t?new Date(t).toLocaleString('th-TH'):'ยังไม่เคย')+` · ข้อมูล ${Object.keys(data).length} วัน`;
  $('shName').value=opt.shareName||'';
- $('icsSet').innerHTML=`<div class="lbl">แบบเวลาหลัก (ใช้เมื่อไม่ได้เลือกแบบเฉพาะเดือน/เฉพาะวัน)</div><div class="seg">`+[1,2].map(n=>`<button class="sg${opt.timePat===n?' sel':''}" data-mp="${n}">แบบ ${n}</button>`).join('')+`</div>`+[1,2].map(n=>`<div class="card"><b>แบบ ${n}: ${patText(n)}</b>`+[['m','เวรเช้า'],['e','เวรบ่าย'],['n','เวรดึก']].map(([k,l])=>`<div class="rr"><label>${l}</label><input type="time" data-ic="${n}${k}0" value="${opt.pats[n][k][0]}"><span>ถึง</span><input type="time" data-ic="${n}${k}1" value="${opt.pats[n][k][1]}"></div>`).join('')+`</div>`).join('')+`<p class="hint">00:00 ของเวรดึกคือ 24:00 ของคืนวันที่ลงเวร (เช่น ดึก 24:00-08:00 ลงวันที่ 5 = เริ่มต้นคืนวันที่ 5 ไปจบเช้าวันที่ 6)</p>`;
+ $('icsSet').innerHTML=`<div class="lbl">แบบเวลาหลัก (ใช้เมื่อไม่ได้เลือกแบบเฉพาะเดือน/เฉพาะวัน)</div><div class="seg">`+[1,2,3].map(n=>`<button class="sg${opt.timePat===n?' sel':''}" data-mp="${n}">${patName(n)}</button>`).join('')+`</div>`+[1,2,3].map(n=>`<div class="card"><b>${patName(n)}: ${patText(n)}</b>`+[['m','เวรเช้า'],['e','เวรบ่าย'],['n','เวรดึก']].map(([k,l])=>`<div class="rr"><label>${l}</label><input type="time" data-ic="${n}${k}0" value="${opt.pats[n][k][0]}"><span>ถึง</span><input type="time" data-ic="${n}${k}1" value="${opt.pats[n][k][1]}"></div>`).join('')+`</div>`).join('')+`<p class="hint">แบบ 3 ใช้ตั้งเวลาเข้า-ออกเวรเองตามหน่วยงานของคุณ · 00:00 ของเวรดึกคือ 24:00 ของคืนวันที่ลงเวร (เช่น ดึก 24:00-08:00 ลงวันที่ 5 = เริ่มต้นคืนวันที่ 5 ไปจบเช้าวันที่ 6)</p>`;
  $('minRest').value=opt.minRest;$('maxRun').value=opt.maxRun;
  $('icsAl').value=opt.icsAl;$('icsOff').checked=opt.icsOff;$('optPay').checked=opt.showPay;$('optOT').checked=opt.showOT}
 $('bkSave').onclick=async()=>{download(new Blob([await backupText()],{type:'application/json'}),bkName());markBk()};
@@ -848,14 +852,14 @@ function parseBackup(t){let o;try{o=JSON.parse(t.replace(/^﻿/,'').trim())}catc
  const out={};Object.keys(o.data).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const r=o.data[k];if(!r||typeof r!=='object')return;
   let rtime=r.rtime||null;if(!rtime&&r.rh!==undefined&&+r.rh>=0)rtime=pad2(+r.rh)+':'+pad2(+r.rm||0);
   const s=r.s&&SH[r.s]?r.s:null;
-  out[k]={s,note:String(r.note||''),st:r.st||null,hl:+r.hl||0,rt:String(r.rt||''),rtime,otm:+r.otm||0,ote:+r.ote||0,otn:+r.otn||0,hd:+r.hd||0,tp:[1,2].includes(+r.tp)?+r.tp:0,
+  out[k]={s,note:String(r.note||''),st:r.st||null,hl:+r.hl||0,rt:String(r.rt||''),rtime,otm:+r.otm||0,ote:+r.ote||0,otn:+r.otn||0,hd:+r.hd||0,tp:[1,2,3].includes(+r.tp)?+r.tp:0,
    swt:['cover','gave','swap'].includes(r.swt)?r.swt:'',swp:String(r.swp||''),swa:+r.swa||0,swd:r.swd===true||r.swd==='true'||r.swd===1}});
  return{data:out,rates:o.rates||null,settings:o.settings||null,rem:o.web&&o.web.rem||null,web:o.web||null,pics:Array.isArray(o.pics)?o.pics:[]}}
 async function applyRestore(replace){if(!pend)return;if(replace)data={};Object.assign(data,pend.data);store();
  if(pend.rates){RK.forEach(k=>{if(pend.rates[k]!==undefined)rates[k]=String(pend.rates[k])});saveRates()}
  const st=pend.settings;if(st){['showPay','showOT','wkHd'].forEach(k=>{if(typeof st[k]==='boolean')opt[k]=st[k]});if(typeof st.shareName==='string')opt.shareName=st.shareName;saveOpt()}
  if(pend.rem){Object.assign(rem,pend.rem);saveRem()}
- if(pend.web){if(pend.web.pats&&pend.web.pats[1]&&pend.web.pats[2])opt.pats=pend.web.pats;if([1,2].includes(pend.web.timePat))opt.timePat=pend.web.timePat;if(pend.web.monthPat&&typeof pend.web.monthPat==='object')opt.monthPat=pend.web.monthPat;saveOpt()}
+ if(pend.web){if(pend.web.pats&&pend.web.pats[1]&&pend.web.pats[2]){const p3=pend.web.pats[3]||opt.pats[3];opt.pats=Object.assign({},pend.web.pats,{3:p3})}if([1,2,3].includes(pend.web.timePat))opt.timePat=pend.web.timePat;if(pend.web.monthPat&&typeof pend.web.monthPat==='object')opt.monthPat=pend.web.monthPat;saveOpt()}
  const n=Object.keys(pend.data).length;let np=0;
  if(pend.pics.length){try{const have=new Set((await picAll()).map(p=>p.ym+'|'+p.t));
   for(const p of pend.pics){if(!p||!p.data||have.has(p.ym+'|'+p.t))continue;const blob=await (await fetch(p.data)).blob();await ptx('readwrite',s=>s.add({ym:p.ym,t:+p.t||Date.now(),cap:p.cap||'',blob}));np++}}catch(e){}}
