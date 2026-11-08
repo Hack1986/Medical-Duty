@@ -52,11 +52,13 @@ button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
 .opts button{padding:9px 2px;border-radius:10px;color:#fff;font-weight:700;font-size:14px;line-height:1.25}
 .opts button small{display:block;font-weight:400;font-size:11px;opacity:.92}
 .opts button.sel{outline:3px solid var(--accent);outline-offset:2px}
-.strip{display:flex;gap:6px;overflow-x:auto;padding:3px}
+.strip{display:flex;flex-wrap:wrap;gap:6px;max-height:210px;overflow-y:auto;padding:3px;-webkit-overflow-scrolling:touch}
+.strip .cat{flex:0 0 100%;font-size:12px;color:var(--mute);margin:6px 2px 0}
 .strip button{flex:0 0 auto;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);font-size:22px;display:grid;place-items:center}
 .strip button.sel{outline:2px solid var(--accent)}
 .strip .none{font-size:11px}
-.hls{display:flex;gap:10px;padding:3px}
+.hls{display:flex;flex-wrap:wrap;gap:9px;padding:3px;max-height:190px;overflow-y:auto}
+.hlc{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--mute)}.hlc input{width:44px;height:32px;padding:0;border:1px solid var(--line);border-radius:8px;background:none}.hlc.sel input{outline:3px solid var(--accent);outline-offset:1px}
 .hls button{width:32px;height:32px;border-radius:50%;border:1px solid var(--mute);font-size:12px;color:var(--mute)}
 .hls button.sel{outline:3px solid var(--accent);outline-offset:1px}
 input[type=text]{width:100%;margin-top:4px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
@@ -409,6 +411,8 @@ input,select,textarea{font-size:16px!important}
   <div class="rates"><label>เช้า<input type="number" inputmode="decimal" data-r="m"></label><label>บ่าย<input type="number" inputmode="decimal" data-r="e"></label><label>ดึก<input type="number" inputmode="decimal" data-r="n"></label></div>
   <div class="lbl">อัตราค่าเวรวันหยุด (ว่าง = ใช้อัตราวันปกติ)</div>
   <div class="rates"><label>เช้า<input type="number" inputmode="decimal" data-r="hm"></label><label>บ่าย<input type="number" inputmode="decimal" data-r="he"></label><label>ดึก<input type="number" inputmode="decimal" data-r="hn"></label></div>
+  <div class="lbl">ค่าตอบแทนวันหยุดพิเศษ (บาทต่อเวร บวกเพิ่มจากค่าเวรวันหยุด)</div>
+  <div class="rates"><label>เวรที่ขึ้นในวันหยุดพิเศษ<input type="number" inputmode="decimal" data-r="sp"></label></div>
   <div id="otRates">
   <div class="lbl">ตั้งอัตรา OT วันปกติ (บาทต่อเวร OT)</div>
   <div class="rates"><label>OT เช้า<input type="number" inputmode="decimal" data-r="om"></label><label>OT บ่าย<input type="number" inputmode="decimal" data-r="oe"></label><label>OT ดึก<input type="number" inputmode="decimal" data-r="on"></label></div>
@@ -418,7 +422,7 @@ input,select,textarea{font-size:16px!important}
   <label class="rr"><input type="checkbox" id="wkHd"><span>นับเสาร์-อาทิตย์เป็นวันหยุด (นักขัตฤกษ์นับเป็นวันหยุดอยู่แล้ว)</span></label>
   <div class="lbl">เวรควบ คิดเงินแค่เวรเดียว (ตั้งต้น: เวรแรก = เช้า)</div>
   <div class="cmb" id="cmb"></div>
-  <p class="hint">วันลาไม่คิดเงิน เวรที่เขาขึ้นแทนเราไม่นับเงินเวรของเรา เปลี่ยนวันหยุด/วันปกติรายวันได้ในหน้าลงเวร</p>
+  <p class="hint">วันลา (ลาพักร้อน ลากิจ ลาป่วย ลาคลอด ลาบวช ลาดูแลภรรยาหลังคลอด) ไม่คิดเงิน เวรที่เขาขึ้นแทนเราไม่นับเงินเวรของเรา เปลี่ยนวันหยุด/วันปกติ/วันหยุดพิเศษรายวันได้ในหน้าลงเวร วันหยุดพิเศษใช้อัตราวันหยุด แล้วบวกค่าตอบแทนวันหยุดพิเศษเพิ่มต่อเวร</p>
   <div class="lbl">เทียบกับสลิปเงินเดือนเดือนนี้</div>
   <div class="slip"><input type="number" inputmode="decimal" id="slip" placeholder="ยอดรวมเงินเวร/OT ตามสลิป (บาท)"></div>
   <div id="slipDiff" class="hint"></div>
@@ -495,6 +499,7 @@ input,select,textarea{font-size:16px!important}
   <div class="strip" id="stks"></div>
   <div class="lbl">ไฮไลต์ช่อง</div>
   <div class="hls" id="hls"></div>
+  <label class="hlc" id="hlcW"><input type="color" id="hlCustom" value="#ffd6e8"><span>เลือกสีเอง</span></label>
   <div class="lbl" id="otLbl">OT วันนี้ (จำนวนเวร OT)</div><div class="ot" id="ot"></div>
   <div class="lbl">สลับเวร / ขึ้นเวรแทน</div>
   <div class="seg" id="swSeg"></div>
@@ -515,7 +520,22 @@ const SH={
  '-/X':{c:'#d9822b',d:'เวรเช้า+บ่าย'},'-/O':{c:'#7b6fb0',d:'เวรเช้า+ดึก'},'X/O':{c:'#b5527a',d:'เวรบ่าย+ดึก'}};
 const OFF=['Su','Sa','M','T','W','Th','F'],COMBO=['-/X','-/O','X/O'];
 const ST=[['🌸','spin'],['💖','pulse'],['⭐','twinkle'],['🐱','bounce'],['🌈','float'],['🦋','flutter'],['☕','float'],['🎀','wiggle'],['🍀','spin'],['🐶','bounce'],['🌻','spin'],['🎉','pulse'],['🐰','bounce'],['☁️','float'],['🩺','wiggle'],['💉','wiggle'],['🌙','twinkle'],['🏖️','wiggle'],['✈️','float'],['🎂','pulse'],['💊','bounce'],['🩹','wiggle'],['🏥','pulse'],['🌡️','float']];
-const HL=['','#fde68a','#fbcfe8','#bfdbfe','#bbf7d0','#e9d5ff','#fed7aa'];
+const STX=[
+['หน้าตา','😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😋 😛 😜 🤪 😎 🤓 🥳 🤩 😏 😴 😪 🤤 😷 🤒 🤕 🤧 🥵 🥶 😵 🤯 🥺 😢 😭 😤 😡 😱 😳 🤗 🤔 🤭 🤫 😬 🙄 😮‍💨 😶'],
+['หัวใจ/สัญลักษณ์','❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💕 💞 💓 💗 💝 💘 💟 ✨ 💫 🌟 ⚡ 🔥 💥 💯 ✅ ❌ ❗ ❓ ⭕ 🔔 🔕 📌 📍 🏳️‍🌈 🎯 💤 💢 💦 💨'],
+['มือ/คน','👍 👎 👏 🙌 🙏 🤝 💪 ✌️ 🤞 👌 🤙 👋 ✋ 🖐️ 👊 ✊ 🤟 🧑‍⚕️ 👩‍⚕️ 👨‍⚕️ 🧑‍🔬 👶 🤰 🧘 🏃 💃 🕺 🛌 🙋 🤷 🙇'],
+['สัตว์','🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐔 🐧 🐦 🐤 🦆 🦉 🦄 🐝 🐛 🦋 🐌 🐞 🐢 🐍 🐙 🦀 🐠 🐬 🐳 🦈 🐘 🦒 🦘 🐿️ 🦥 🦦 🐕 🐈 🐇 🦜 🦢 🦩'],
+['ต้นไม้/ธรรมชาติ','🌸 🌺 🌻 🌹 🌷 🌼 💐 🌿 🍃 🍀 🌱 🌳 🌴 🌵 🍁 🍂 🍄 🌾 ⛰️ 🏔️ 🌋 🏝️ 🏖️ 🌊 🌈 ☀️ 🌤️ ⛅ ☁️ 🌧️ ⛈️ ❄️ ☃️ 🌙 ⭐ 🌠 🪐 🌍 💧 🔥'],
+['อาหาร','🍎 🍊 🍋 🍌 🍉 🍇 🍓 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🥑 🌽 🥕 🍞 🥐 🧀 🍳 🥞 🥓 🍔 🍟 🍕 🌭 🌮 🍜 🍲 🍣 🍱 🍙 🍚 🍛 🍤 🍦 🍩 🍪 🎂 🍰 🧁 🍫 🍬 🍭 🍿 🥤 ☕ 🍵 🧋 🍺 🍷'],
+['กิจกรรม/กีฬา','⚽ 🏀 🏈 ⚾ 🎾 🏐 🏓 🏸 🥊 ⛳ 🎳 🏊 🚴 🏋️ 🧗 🎮 🎲 🎨 🎬 🎤 🎧 🎸 🎹 🎺 🥁 📚 ✏️ 🧩 🎣 ⛺ 🎡 🎢'],
+['เดินทาง','🚗 🚕 🚌 🚑 🚒 🚓 🏍️ 🚲 🛵 🚆 🚄 ✈️ 🚁 🚀 🛳️ ⛵ 🏠 🏥 🏢 🏫 🏖️ 🗼 🛕 ⛩️ 🎡 🧳 🗺️ ⛽'],
+['งานแพทย์/ของใช้','🩺 💉 💊 🩹 🩸 🧬 🔬 🧪 🌡️ 😷 🦷 🦴 🧠 🫀 🫁 👁️ 🏥 🚑 ⚕️ 🧴 🧼 🧽 🛏️ 💻 📱 📞 📝 📋 📅 ⏰ ⌛ 💼 🎓 🏆 🥇 🎖️ 💰 💳 🎁'],
+['เทศกาล/ปาร์ตี้','🎉 🎊 🎈 🎂 🎁 🎀 🎄 🎅 🎃 👻 🧧 🪔 🎆 🎇 🧨 🥂 🍾 🪅 🎵 🎶 🕯️ 🙏 💐 🏮']];
+(function(){const seen=new Set(ST.map(x=>x[0])),AN=['pulse','bounce','float','wiggle','twinkle','flutter','spin'];let i=0;
+STX.forEach(([c,t])=>{t.split(' ').forEach(e=>{if(!e||seen.has(e))return;seen.add(e);ST.push([e,AN[i++%AN.length],c])})})})();
+const HL=['','#fde68a','#fbcfe8','#bfdbfe','#bbf7d0','#e9d5ff','#fed7aa',
+'#fecaca','#fca5a5','#fda4af','#f9a8d4','#f5d0fe','#d8b4fe','#c4b5fd','#c7d2fe','#a5b4fc','#93c5fd','#bae6fd','#7dd3fc','#a5f3fc','#67e8f9','#99f6e4','#5eead4','#a7f3d0','#86efac','#bef264','#d9f99d','#fef08a','#fde047','#fcd34d','#fdba74','#fb923c','#fecdd3','#ffe4e6','#fce7f3','#ede9fe','#e0f2fe','#ccfbf1','#dcfce7','#ecfccb','#fef9c3','#ffedd5','#e7e5e4','#d6d3d1','#cbd5e1','#e2e8f0','#f5e0c3','#e8c9a0','#d4a574','#bfe3d0','#f6c6ea','#c6e5f6'];
+const hc=h=>typeof h==='string'?h:(HL[h]||'');
 const TH_M=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const DOW=['อา','จ','อ','พ','พฤ','ศ','ส'];
 let data={};try{data=JSON.parse(localStorage.getItem('nurseDuty2')||'{}')}catch(e){data={}}
@@ -537,20 +557,20 @@ function render(){
     const k=key(y,m,d),r=data[k]||{},hol=isHol(k,r);
     if(r.s&&SH[r.s])cnt[r.s]=(cnt[r.s]||0)+1;
     const td=t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===d;
-    h+=`<button class="cell${td?' today':''}${r.hl?' hl':''}" style="${r.hl?'background:'+HL[r.hl]:''}" data-k="${k}"><span class="num${hol?' hday':''}">${d}${r.rtime?' ⏰':''}${r.swt?' ⇄':''}${W[k]?' ⚠':''}</span>${hol&&HOLI[k]?`<span class="hn">${HOLI[k]}</span>`:''}${r.st?`<span class="stk a-${anim(r.st)}">${r.st}</span>`:''}${SH[r.s]?`<span class="tag${r.swt==='gave'?' gave':''}" style="background:${SH[r.s].c};${fg(r.s)}">${r.s}</span>`:''}${otTag(r)}${r.note?`<span class="note">${esc(r.note)}</span>`:''}</button>`;
+    h+=`<button class="cell${td?' today':''}${r.hl?' hl':''}" style="${r.hl?'background:'+hc(r.hl):''}" data-k="${k}"><span class="num${hol?' hday':''}">${d}${r.rtime?' ⏰':''}${r.swt?' ⇄':''}${W[k]?' ⚠':''}</span>${hol&&HOLI[k]?`<span class="hn">${HOLI[k]}</span>`:''}${r.st?`<span class="stk a-${anim(r.st)}">${r.st}</span>`:''}${SH[r.s]?`<span class="tag${r.swt==='gave'?' gave':''}" style="background:${SH[r.s].c};${fg(r.s)}">${r.s}</span>`:''}${otTag(r)}${r.note?`<span class="note">${esc(r.note)}</span>`:''}</button>`;
   }
   $("grid").innerHTML=h;updPay();updPicQuick();updWarn(W);updNudge();
   const chip=(l,n,k)=>n?`<span class="chip" style="background:${SH[k].c};${fg(k)}">${l} ${n}</span>`:'';
   const off=OFF.reduce((a,k)=>a+(cnt[k]||0),0);
-  $('sum').innerHTML=(chip('เช้า',cnt['-'],'-')+chip('บ่าย',cnt['X'],'X')+chip('ดึก',cnt['O'],'O')+chip('หยุด',off,'Su')+chip('ลา',cnt['V'],'V')+chip('ลากิจ',cnt['LK'],'LK')+chip('ลาป่วย',cnt['LS'],'LS')+COMBO.map(k=>chip(k,cnt[k],k)).join(''))||'<span class="hint">ยังไม่มีเวรในเดือนนี้</span>';
+  $('sum').innerHTML=(chip('เช้า',cnt['-'],'-')+chip('บ่าย',cnt['X'],'X')+chip('ดึก',cnt['O'],'O')+chip('หยุด',off,'Su')+chip('ลา',cnt['V'],'V')+chip('ลากิจ',cnt['LK'],'LK')+chip('ลาป่วย',cnt['LS'],'LS')+chip('ลาคลอด',cnt['ML'],'ML')+chip('ลาบวช',cnt['LB'],'LB')+chip('ดูแลภรรยา',cnt['LW'],'LW')+COMBO.map(k=>chip(k,cnt[k],k)).join(''))||'<span class="hint">ยังไม่มีเวรในเดือนนี้</span>';
 }
 function drawSheet(){
   $('opts').innerHTML=Object.entries(SH).map(([k,v])=>`<button data-s="${k}" class="${sel===k?'sel':''}" style="background:${v.c};${v.t?'color:'+v.t:''}">${k}<small>${v.d}</small></button>`).join('')+`<button data-s="" style="background:#6b7c7a">ลบเวร</button>`;
-  $('stks').innerHTML=`<button class="none${stk?'':' sel'}" data-e="">ไม่มี</button>`+ST.map(([e,a])=>`<button data-e="${e}" class="${stk===e?'sel':''}"><span class="a-${a}" style="display:inline-block">${e}</span></button>`).join('');
+  {let lc='';$('stks').innerHTML=`<button class="none${stk?'':' sel'}" data-e="">ไม่มี</button>`+ST.map(([e,a,c])=>{const h=(c&&c!==lc)?(lc=c,`<div class="cat">${c}</div>`):'';return h+`<button data-e="${e}" class="${stk===e?'sel':''}"><span class="a-${a}" style="display:inline-block">${e}</span></button>`}).join('')}
   const hn=HOLI[pick]?`(${HOLI[pick]})`:'';$('hdInfo').textContent=hn;
   $('tpSeg').innerHTML=[[0,'ตามเดือน/ค่าหลัก ('+patName(tpOf(pick,null))+')'],[1,'แบบ 1'],[2,'แบบ 2'],[3,'แบบ 3 · กำหนดเอง']].map(([v,l])=>`<button class="sg${tp===v?' sel':''}" data-t="${v}">${l}</button>`).join('');
-  $('hdSeg').innerHTML=[[0,'อัตโนมัติ'],[1,'วันหยุด'],[2,'วันปกติ']].map(([v,l])=>`<button class="sg${hd===v?' sel':''}" data-h="${v}">${l}</button>`).join('');
-  $('hls').innerHTML=HL.map((c,i)=>`<button data-i="${i}" class="${hl===i?'sel':''}" style="background:${c||'transparent'}" aria-label="ไฮไลต์ ${i}">${i?'':'✕'}</button>`).join('');
+  $('hdSeg').innerHTML=[[0,'อัตโนมัติ'],[1,'วันหยุด'],[2,'วันปกติ'],[3,'วันหยุดพิเศษ']].map(([v,l])=>`<button class="sg${hd===v?' sel':''}" data-h="${v}">${l}</button>`).join('');
+  $('hls').innerHTML=HL.map((c,i)=>`<button data-i="${i}" class="${hl===i?'sel':''}" style="background:${c||'transparent'}" aria-label="ไฮไลต์ ${i}">${i?'':'✕'}</button>`).join('');$('hlcW').classList.toggle('sel',typeof hl==='string');if(typeof hl==='string')$('hlCustom').value=hl;
 }
 function openDay(k){
   pick=k;lastKey=k;const r=data[k]||{};sel=r.s||null;stk=r.st||null;hl=r.hl||0;hd=r.hd||0;tp=r.tp||0;swt=r.swt||'';swp=r.swp||'';swa=r.swa||'';swd=!!r.swd;
@@ -561,6 +581,7 @@ $('grid').onclick=e=>{const b=e.target.closest('.cell[data-k]');if(!b)return;ope
 $('opts').onclick=e=>{const b=e.target.closest('button');if(!b)return;sel=b.dataset.s||null;drawSheet()};
 $('stks').onclick=e=>{const b=e.target.closest('button');if(!b)return;stk=b.dataset.e||null;drawSheet();if(stk&&rem.fx)play('pop')};
 $('hls').onclick=e=>{const b=e.target.closest('button');if(!b)return;hl=+b.dataset.i;drawSheet()};
+$('hlCustom').oninput=e=>{hl=e.target.value;drawSheet()};
 let sheetPushed=false;
 function closeSheet(){$('sheet').classList.remove('open');if(sheetPushed){sheetPushed=false;try{history.back()}catch(e){}}}
 window.addEventListener('popstate',e=>{if(sheetPushed){sheetPushed=false;$('sheet').classList.remove('open');return}
@@ -656,13 +677,14 @@ const DK7=['-','X','Su','Sa','M','T','W','Th','F','-/X'];
 Object.keys(PC7).forEach(k=>{SH[k].c=PC7[k];if(DK7.includes(k))SH[k].t='#2a2000';else delete SH[k].t});
 ['Su','Sa','M','T','W','Th','F'].forEach(k=>SH[k].t='#38506a');
 SH['LK']={c:'#89a9ca',t:'#10263d',d:'ลากิจ'};SH['LS']={c:'#c95c54',d:'ลาป่วย'};
+SH['ML']={c:'#d78bb4',t:'#3a1030',d:'ลาคลอด'};SH['LB']={c:'#e3a85a',t:'#3a2200',d:'ลาบวช'};SH['LW']={c:'#8f88c8',d:'ลาดูแลภรรยาหลังคลอด'};
 /* ---------- OT + pay ---------- */
 let ot={m:0,e:0,n:0};
 function drawOt(){$('otLbl').style.display=$('ot').style.display=opt.showOT?'':'none';const on=ot.m+ot.e+ot.n>0;$('ot').innerHTML=`<label class="rr" style="width:100%"><input type="checkbox" id="otOn" ${on?'checked':''}><span>เพิ่ม OT (ตั้งต้นเป็น OT เช้า)</span></label>`+(on?[['m','OT เช้า'],['e','OT บ่าย'],['n','OT ดึก']].map(([k,l])=>`<div class="otc">${l}<br><button data-o="${k}" data-d="-1">−</button><b>${ot[k]}</b><button data-o="${k}" data-d="1">+</button></div>`).join(''):'')}
 $('ot').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.o;ot[k]=Math.max(0,ot[k]+(+b.dataset.d));drawOt()};
 $('ot').onchange=e=>{if(e.target.id==='otOn'){ot=e.target.checked?{m:1,e:0,n:0}:{m:0,e:0,n:0};drawOt()}};
 function otTag(r){if(!opt.showOT)return '';const s=(r.otm?'ช':'')+(r.ote?'บ':'')+(r.otn?'ด':'');return s?`<span class="otb">OT ${s}</span>`:''}
-let rates={m:'',e:'',n:'',om:'',oe:'',on:'',cx:'',co:'',xo:'',hm:'',he:'',hn:'',hom:'',hoe:'',hon:''};
+let rates={sp:'',m:'',e:'',n:'',om:'',oe:'',on:'',cx:'',co:'',xo:'',hm:'',he:'',hn:'',hom:'',hoe:'',hon:''};
 try{Object.assign(rates,JSON.parse(localStorage.getItem('dutyRates')||'{}'))}catch(e){}
 const RK=Object.keys(rates);
 const saveRates=()=>{try{localStorage.setItem('dutyRates',JSON.stringify(rates))}catch(e){}};
@@ -679,16 +701,17 @@ const tpOf=(k,r)=>(r&&r.tp)||opt.monthPat[k.slice(0,7)]||opt.timePat;
 function ptimes(k,r,p){const [a,b]=opt.pats[tpOf(k,r)][p];return{a,b,sh:(p==='n'&&a==='00:00')?1:0,ed:b<=a?1:0}}
 function patText(n){const q=opt.pats[n],f=(t,x)=>t==='00:00'&&x?'24:00':t;return `เช้า ${q.m[0]}-${q.m[1]} · บ่าย ${q.e[0]}-${f(q.e[1],1)} · ดึก ${f(q.n[0],1)}-${q.n[1]}`}
 const saveOpt=()=>{try{localStorage.setItem('dutyOpt',JSON.stringify(opt))}catch(e){}};
-function isHol(k,r){if(r&&r.hd===1)return true;if(r&&r.hd===2)return false;if(HOLI[k])return true;
+const isSpc=(k,r)=>!!r&&(r.hd===3||(!r.hd&&HOLI[k]==='วันหยุดพิเศษ'));
+function isHol(k,r){if(r&&(r.hd===1||r.hd===3))return true;if(r&&r.hd===2)return false;if(HOLI[k])return true;
  if(opt.wkHd){const w=new Date(k+'T00:00:00').getDay();return w===0||w===6}return false}
 const rf=(hol,k)=>{if(hol){const v=parseFloat(rates['h'+k]);if(!isNaN(v))return v}return rn(k)};
 function kindOf(r){const s=r.s||'';return s==='-'?'m':s==='X'?'e':s==='O'?'n':s==='-/X'?pk('cx','m','e'):s==='-/O'?pk('co','m','n'):s==='X/O'?pk('xo','e','n'):null}
-function dayCalc(k,r){const hol=isHol(k,r),kd=kindOf(r);
- return{hol,kd,sp:(!kd||r.swt==='gave')?0:rf(hol,kd),op:(r.otm||0)*rf(hol,'om')+(r.ote||0)*rf(hol,'oe')+(r.otn||0)*rf(hol,'on')}}
+function dayCalc(k,r){const hol=isHol(k,r),kd=kindOf(r),spc=!!kd&&r.swt!=='gave'&&isSpc(k,r);
+ return{hol,kd,spc,sp:(!kd||r.swt==='gave')?0:rf(hol,kd)+(spc?rn('sp'):0),op:(r.otm||0)*rf(hol,'om')+(r.ote||0)*rf(hol,'oe')+(r.otn||0)*rf(hol,'on')}}
 function calcPay(y,m){y=y??cur.getFullYear();m=m??cur.getMonth();const days=new Date(y,m+1,0).getDate();
- const c={m:0,e:0,n:0,hm:0,he:0,hn:0,om:0,oe:0,on:0,hom:0,hoe:0,hon:0};let sp=0,op=0;
+ const c={sx:0,m:0,e:0,n:0,hm:0,he:0,hn:0,om:0,oe:0,on:0,hom:0,hoe:0,hon:0};let sp=0,op=0;
  for(let d=1;d<=days;d++){const k=key(y,m,d),r=data[k];if(!r)continue;const x=dayCalc(k,r);sp+=x.sp;op+=x.op;
-  if(x.kd&&r.swt!=='gave')c[(x.hol?'h':'')+x.kd]++;
+  if(x.kd&&r.swt!=='gave')c[(x.hol?'h':'')+x.kd]++;if(x.spc)c.sx++;
   const h=x.hol?'h':'';c[h+'om']+=r.otm||0;c[h+'oe']+=r.ote||0;c[h+'on']+=r.otn||0}
  return{c,sp,op}}
 function drawTpMonth(){const ym=mKey(),v=opt.monthPat[ym]||opt.timePat;$('tpTx').textContent='('+patText(opt.monthPat[ym]||opt.timePat)+')';
@@ -703,6 +726,7 @@ function drawMoney(){const p=calcPay(),c=p.c,L=(l,n,k,h)=>`<div class="rr"><labe
  $('otRates').style.display=opt.showOT?'':'none';$('wkHd').checked=opt.wkHd;
  $('mSum').innerHTML=`<div class="lbl">สรุป ${TH_M[cur.getMonth()]} ${cur.getFullYear()+543}</div>`+L('เวรเช้า',c.m,'m')+L('เวรบ่าย',c.e,'e')+L('เวรดึก',c.n,'n')
   +(hs?L('เวรเช้า (วันหยุด)',c.hm,'m',1)+L('เวรบ่าย (วันหยุด)',c.he,'e',1)+L('เวรดึก (วันหยุด)',c.hn,'n',1):'')
+  +(c.sx?L('ค่าตอบแทนวันหยุดพิเศษ',c.sx,'sp'):'')
   +`<div class="rr"><label><b>รวมเงินเวร</b></label><b>${fm(p.sp)}</b></div>`
   +(opt.showOT?L('OT เช้า',c.om,'om')+L('OT บ่าย',c.oe,'oe')+L('OT ดึก',c.on,'on')
    +(ho?L('OT เช้า (วันหยุด)',c.hom,'om',1)+L('OT บ่าย (วันหยุด)',c.hoe,'oe',1)+L('OT ดึก (วันหยุด)',c.hon,'on',1):'')
@@ -852,7 +876,7 @@ function parseBackup(t){let o;try{o=JSON.parse(t.replace(/^﻿/,'').trim())}catc
  const out={};Object.keys(o.data).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const r=o.data[k];if(!r||typeof r!=='object')return;
   let rtime=r.rtime||null;if(!rtime&&r.rh!==undefined&&+r.rh>=0)rtime=pad2(+r.rh)+':'+pad2(+r.rm||0);
   const s=r.s&&SH[r.s]?r.s:null;
-  out[k]={s,note:String(r.note||''),st:r.st||null,hl:+r.hl||0,rt:String(r.rt||''),rtime,otm:+r.otm||0,ote:+r.ote||0,otn:+r.otn||0,hd:+r.hd||0,tp:[1,2,3].includes(+r.tp)?+r.tp:0,
+  out[k]={s,note:String(r.note||''),st:r.st||null,hl:(typeof r.hl==='string'&&/^#[0-9a-fA-F]{6}$/.test(r.hl))?r.hl:(+r.hl||0),rt:String(r.rt||''),rtime,otm:+r.otm||0,ote:+r.ote||0,otn:+r.otn||0,hd:+r.hd||0,tp:[1,2,3].includes(+r.tp)?+r.tp:0,
    swt:['cover','gave','swap'].includes(r.swt)?r.swt:'',swp:String(r.swp||''),swa:+r.swa||0,swd:r.swd===true||r.swd==='true'||r.swd===1}});
  return{data:out,rates:o.rates||null,settings:o.settings||null,rem:o.web&&o.web.rem||null,web:o.web||null,pics:Array.isArray(o.pics)?o.pics:[]}}
 async function applyRestore(replace){if(!pend)return;if(replace)data={};Object.assign(data,pend.data);store();
@@ -938,7 +962,7 @@ const csvc=v=>{v=String(v??'');return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""'
 function buildCsv(){const rows=monthRows(),P=calcPay(),c=P.c;let tsp=0,top=0,a=0,b=0,e=0;
  const L=['วันที่,วัน,เวร,ชื่อเวร,วันหยุด,OT เช้า,OT บ่าย,OT ดึก,ค่าเวร,ค่า OT,รวม,สลับเวร,คู่สลับ,ยอดสลับ,สถานะจ่ายคืน,โน้ต'];
  rows.forEach(({k,dow,r,x})=>{tsp+=x.sp;top+=x.op;a+=r.otm||0;b+=r.ote||0;e+=r.otn||0;
-  L.push([k,dow,r.s||'',r.s&&SH[r.s]?SH[r.s].d:'',x.hol?(HOLI[k]||'วันหยุด'):'',r.otm||0,r.ote||0,r.otn||0,x.sp,x.op,x.sp+x.op,SWE(r),r.swp||'',r.swa>0?r.swa:'',(r.swt==='cover'||r.swt==='gave')?(r.swd?'จ่ายคืนแล้ว':'ยังไม่จ่ายคืน'):'',r.note||''].map(csvc).join(','))});
+  L.push([k,dow,r.s||'',r.s&&SH[r.s]?SH[r.s].d:'',x.hol?(HOLI[k]||(x.spc?'วันหยุดพิเศษ':'วันหยุด')):'',r.otm||0,r.ote||0,r.otn||0,x.sp,x.op,x.sp+x.op,SWE(r),r.swp||'',r.swa>0?r.swa:'',(r.swt==='cover'||r.swt==='gave')?(r.swd?'จ่ายคืนแล้ว':'ยังไม่จ่ายคืน'):'',r.note||''].map(csvc).join(','))});
  L.push(['รวม','','','','',a,b,e,tsp,top,tsp+top,'','','','',''].map(csvc).join(','));L.push('');
  const ln=(x,y)=>L.push(csvc(x)+','+csvc(y));
  ln('สรุปเดือน',TH_M[cur.getMonth()]+' '+(cur.getFullYear()+543));
@@ -966,7 +990,7 @@ function buildImage(){const y=cur.getFullYear(),m=cur.getMonth(),W=1080,mg=30,gp
  c.font=`700 26px ${F}`;DOW.forEach((d,i)=>{c.fillStyle=i===0?red:navy;c.fillText(d,mg+i*(cw+gp)+cw/2,hh+30)});
  const cnt={};
  for(let d=1;d<=n;d++){const k=key(y,m,d),r=data[k]||{},idx=first+d-1,col=idx%7,row=Math.floor(idx/7),x=mg+col*(cw+gp),yy=hh+44+row*(ch+gp),hol=isHol(k,data[k]);
-  rr(x,yy,cw,ch,16);c.fillStyle=r.hl?HL[r.hl]:'#fff';c.fill();c.strokeStyle='#e1eaf1';c.lineWidth=2;c.stroke();
+  rr(x,yy,cw,ch,16);c.fillStyle=r.hl?hc(r.hl):'#fff';c.fill();c.strokeStyle='#e1eaf1';c.lineWidth=2;c.stroke();
   c.textAlign='left';c.font=`700 26px ${F}`;c.fillStyle=(hol||col===0)?red:'#617789';c.fillText(d,x+10,yy+30);let cy=yy+38;
   if(hol&&HOLI[k]){c.font=`400 16px ${F}`;c.fillStyle=red;c.fillText(clip(HOLI[k],cw-12),x+10,yy+50);cy=yy+56}
   if(r.st){c.font=`28px ${F}`;c.textAlign='right';c.fillStyle='#000';c.fillText(r.st,x+cw-8,yy+34);c.textAlign='left'}
@@ -979,7 +1003,7 @@ function buildImage(){const y=cur.getFullYear(),m=cur.getMonth(),W=1080,mg=30,gp
   if(r.note){c.font=`400 17px ${F}`;c.fillStyle=ink;const room=Math.max(0,Math.min(2,Math.floor((yy+ch-cy-4)/19)));let t=r.note.replace(/\s+/g,' '),i=0;
    while(t&&i<room){let l=t;while(l.length&&c.measureText(l).width>cw-14)l=l.slice(0,-1);if(!l)break;c.fillText(l,x+10,cy+14+i*19);t=t.slice(l.length);i++}}}
  let lx=mg,ly=hh+44+rows*(ch+gp)+10;c.font=`700 24px ${F}`;c.textAlign='left';
- const items=[];[['-','เช้า'],['X','บ่าย'],['O','ดึก'],['V','ลา'],['LK','ลากิจ'],['LS','ลาป่วย']].forEach(([k,l])=>{if(cnt[k])items.push([k,l+' '+cnt[k]])});
+ const items=[];[['-','เช้า'],['X','บ่าย'],['O','ดึก'],['V','ลา'],['LK','ลากิจ'],['LS','ลาป่วย'],['ML','ลาคลอด'],['LB','ลาบวช'],['LW','ดูแลภรรยา']].forEach(([k,l])=>{if(cnt[k])items.push([k,l+' '+cnt[k]])});
  const off=OFF.reduce((a,k)=>a+(cnt[k]||0),0);if(off)items.push(['Su','หยุด '+off]);COMBO.forEach(k=>{if(cnt[k])items.push([k,k+' '+cnt[k]])});
  items.forEach(([k,l])=>{const tw=c.measureText(l).width+28;if(lx+tw>W-mg){lx=mg;ly+=44}rr(lx,ly,tw,36,18);c.fillStyle=SH[k].c;c.fill();c.fillStyle=SH[k].t||'#fff';c.fillText(l,lx+14,ly+26);lx+=tw+10});
  c.font=`400 20px ${F}`;c.fillStyle='#617789';c.textAlign='center';c.fillText('ตารางเวรสำหรับบุคลากรทางการแพทย์',W/2,H-18);return cv}
