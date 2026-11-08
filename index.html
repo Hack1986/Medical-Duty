@@ -343,6 +343,14 @@ input,select,textarea{font-size:16px!important}
 }
 @media (min-width:1100px){body{max-width:1120px}.cell{min-height:136px}.sheet.pg{max-width:880px}h1{padding-left:190px;padding-right:190px}}
 @media (min-width:700px) and (max-height:520px){.cell{min-height:92px}h1{min-height:120px}}
+.inst{display:flex;gap:8px;align-items:center;border:1px solid #9ccfb0;background:#eefaf2;border-radius:12px;padding:8px 10px;margin:0 0 8px;font-size:13px}
+.inst[hidden]{display:none}.inst span{flex:1}
+.inst button{padding:7px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:12px;font-weight:600;cursor:pointer}
+.inst #instGo{background:#1f8a4c;color:#fff;border-color:#1f8a4c}
+.instHelp{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+.instHelp[hidden]{display:none}
+.instHelp div{background:#fff;border-radius:16px;padding:18px;max-width:340px;font-size:14px;line-height:1.6}
+.instHelp button{margin-top:10px;width:100%;padding:10px;border-radius:10px;background:#23497e;color:#fff;font-weight:600;border:0}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#23497e">
@@ -360,6 +368,8 @@ input,select,textarea{font-size:16px!important}
 <div class="bar">
   <div class="nav"><button id="prev" aria-label="เดือนก่อน">‹</button><b id="title"></b><button id="next" aria-label="เดือนถัดไป">›</button></div>
 </div>
+<div class="inst" id="inst" hidden><span>📲 ติดตั้งแอพไว้บนหน้าจอหลัก เปิดใช้ได้เร็วและใช้งานออฟไลน์ได้</span><button id="instGo">ติดตั้ง</button><button id="instX" aria-label="ปิด">✕</button></div>
+<div class="instHelp" id="instHelp" hidden><div id="instHelpTx"></div></div>
 <div class="nudge" id="nudge" hidden><span id="nudgeTx"></span><button id="nudgeGo">สำรองเลย</button><button id="nudgeLater">ไว้ทีหลัง</button></div>
 <div class="sum" id="sum"></div>
 <div id="warn"></div>
@@ -973,6 +983,24 @@ $('shImg').onclick=async()=>{try{if(document.fonts&&document.fonts.ready)await d
  const blob=await new Promise(r=>cv.toBlob(r,'image/png'));await shareBlob(blob,`ตารางเวร-${mKey()}.png`,'แชร์ตารางเวร')}catch(e){alert('สร้างรูปไม่สำเร็จ: '+(e.message||e))}};
 render();updPicQuick();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+/* ---------- ติดตั้งแอพ (PWA) ---------- */
+(function(){
+const bar=$('inst'),go=$('instGo'),help=$('instHelp'),tx=$('instHelpTx');let dp=null;
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const dismissed=()=>{try{return Date.now()<+(localStorage.getItem('instHide')||0)}catch(e){return false}};
+function showHelp(h){tx.innerHTML=h+'<button id="instOk">เข้าใจแล้ว</button>';help.hidden=false;$('instOk').onclick=()=>{help.hidden=true}}
+function show(){if(!standalone()&&!dismissed())bar.hidden=false}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;show()});
+window.addEventListener('appinstalled',()=>{dp=null;bar.hidden=true;toast('ติดตั้งแอพเรียบร้อยแล้ว')});
+go.onclick=async()=>{
+ if(dp){dp.prompt();try{await dp.userChoice}catch(e){}dp=null;bar.hidden=true;return}
+ if(isIOS)showHelp('<b>ติดตั้งบน iPhone/iPad</b><br>1) เปิดหน้านี้ใน <b>Safari</b><br>2) กดปุ่ม <b>แชร์</b> (ไอคอนสี่เหลี่ยมมีลูกศรขึ้น)<br>3) เลือก <b>เพิ่มไปยังหน้าจอโฮม</b>');
+ else showHelp('<b>ติดตั้งแอพ</b><br>กดเมนู <b>⋮</b> ของเบราว์เซอร์ (มุมขวาบน) แล้วเลือก <b>ติดตั้งแอพ</b> หรือ <b>เพิ่มไปยังหน้าจอหลัก</b><br><small>ถ้าไม่มีตัวเลือกนี้ ให้เปิดด้วย Chrome หรือ Safari โดยตรง ไม่ใช่เบราว์เซอร์ในแอพแชท (LINE/Facebook)</small>')};
+$('instX').onclick=()=>{bar.hidden=true;try{localStorage.setItem('instHide',Date.now()+3*864e5)}catch(e){}};
+help.onclick=e=>{if(e.target===help)help.hidden=true};
+if(isIOS)show();
+})();
+
 </script>
 </body>
 </html>
