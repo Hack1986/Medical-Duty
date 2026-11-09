@@ -373,6 +373,22 @@ input,select,textarea{font-size:16px!important}
 #edBar{background:#111;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;flex-wrap:wrap}
 #edBar button{flex:1 1 30%;padding:11px 6px;border-radius:12px;background:#2a2a2a;color:#fff;font-weight:600}
 #edBar .ok{background:#2c7a4b}
+#gal{position:fixed;top:0;right:0;bottom:0;left:0;background:#000;z-index:80;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+#gal.open{display:flex}
+#galTop{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111;color:#fff}
+#galTop b{flex:1;text-align:center;font-size:16px}
+#galTop button{padding:8px 14px;border-radius:12px;background:#2a2a2a;color:#fff;font-weight:600;font-size:15px}
+#galBig{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch}
+#galBig img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+#galBig.zoom{display:block}#galBig.zoom img{max-width:none;max-height:none;width:250%}
+#galCap{color:#ddd;font-size:13px;text-align:center;padding:6px 12px;background:#111;min-height:18px}
+#galEmpty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#ccc}
+#galEmpty[hidden]{display:none}
+#galEmpty button{padding:12px 18px;border-radius:12px;background:#2c7a4b;color:#fff;font-weight:600}
+#galThumbs{background:#111;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#galThumbs button{flex:0 0 64px;width:64px;height:64px;border-radius:10px;overflow:hidden;padding:0;border:2px solid transparent;background:#222;opacity:.7}
+#galThumbs button.sel{border-color:#e5a019;opacity:1}
+#galThumbs img{width:100%;height:100%;object-fit:cover;display:block}
 /* v1.18 วันนี้: ไม่ใช้กรอบสีส้ม ใช้วงกลมน้ำเงินที่เลขวันแทน */
 .cell.today{outline:0!important;background:var(--surface);box-shadow:var(--shadow,none)!important}
 .cell.today .num{display:inline-block;min-width:20px;padding:0 5px;border-radius:10px;background:#23497e;color:#fff!important;text-align:center;font-weight:700}
@@ -451,7 +467,7 @@ input,select,textarea{font-size:16px!important}
   <div id="swList"></div>
 </div>
 <div class="sheet pg" id="pics">
-  <h2>ภาพเวรจริง</h2>
+  <h2>ถ่ายภาพ / แก้ไขภาพเวร</h2>
   <div class="pmo"><button id="pPrev">‹</button><b id="pTitle"></b><button id="pNext">›</button></div>
   <p class="hint">ถ่ายภาพตารางเวรจริงที่หน่วยงานติดไว้ หรือเลือกภาพจากอัลบั้ม ภาพจะเก็บไว้ในแอพตามเดือน เปิดดูย้อนหลังได้ทันทีโดยไม่ต้องไปหาในอัลบั้ม</p>
   <button class="big pri" id="pCam">📷 ถ่ายภาพเวรจริง</button>
@@ -461,6 +477,10 @@ input,select,textarea{font-size:16px!important}
   <div class="pgrid" id="pGrid"></div>
   <p class="hint" id="pMsg"></p>
 </div>
+<div id="gal"><div id="galTop"><button id="galPrev">‹</button><b id="galTitle"></b><button id="galNext">›</button><button id="galClose">ปิด</button></div>
+<div id="galBig"><img id="galImg" alt=""></div><div id="galCap"></div>
+<div id="galEmpty" hidden>ยังไม่มีภาพเวรของเดือนนี้<br><button id="galGo">📷 ไปถ่ายภาพ / เพิ่มภาพ</button></div>
+<div id="galThumbs"></div></div>
 <div id="ed"><div id="edStage"><div id="edWrap"><canvas id="edCv"></canvas><div id="edBox"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div></div></div>
 <div id="edBar"><button id="edL">⟲ หมุนซ้าย</button><button id="edR">หมุนขวา ⟳</button><button id="edAll">เต็มภาพ</button><button id="edNo">ยกเลิก</button><button class="ok" id="edOk">✓ บันทึก</button></div></div>
 <div id="pv"><div id="pvImg"></div><div id="pvBar"><input type="text" id="pvCap" placeholder="คำอธิบายภาพ เช่น เวรเดือนนี้ฉบับแก้ไข"><button id="pvEdit">✂️ ตัด/หมุน</button><button id="pvShare">📤 แชร์</button><button class="del" id="pvDel">🗑 ลบ</button><button id="pvClose">ปิด</button></div></div>
@@ -584,7 +604,7 @@ function render(){
     if(r.s&&SH[r.s])cnt[r.s]=(cnt[r.s]||0)+1;
     const td=t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===d;
     const sp=hol&&isSpc(k,r);
-    h+=`<button class="cell${td?' today':''}${r.hl?' hl':''}${hol&&opt.hdBorder?' hb':''}" style="${r.hl?'background:'+hc(r.hl):''}" data-k="${k}"><span class="num${hol?' hday':''}">${d}${sp?'<span class="spc" title="วันหยุดพิเศษ (เพิ่มเติม)">★</span>':''}${r.swt?' ⇄':''}${W[k]?' ⚠':''}</span>${hol&&holName(k)?`<span class="hn">${esc(holName(k))}</span>`:''}${r.st?`<span class="stk a-${anim(r.st)}">${r.st}</span>`:''}${SH[r.s]?`<span class="tag${r.swt==='gave'?' gave':''}" style="background:${SH[r.s].c};${fg(r.s)}">${r.s}</span>`:''}${r.lead&&SH[r.s]?'<span class="otb">หน.</span>':''}${otTag(r)}${r.note?`<span class="note">${esc(r.note)}</span>`:''}</button>`;
+    h+=`<button class="cell${td?' today':''}${r.hl?' hl':''}${hol&&opt.hdBorder?' hb':''}" style="${r.hl?'background:'+hc(r.hl):''}" data-k="${k}"><span class="num${hol?' hday':''}">${d}${sp?'<span class="spc" title="วันหยุดพิเศษ (เพิ่มเติม)">★</span>':''}${r.swt?' ⇄':''}${W[k]?' ⚠':''}</span>${hol&&holName(k)?`<span class="hn">${esc(holName(k))}</span>`:''}${r.st?`<span class="stk a-${anim(r.st)}">${r.st}</span>`:''}${SH[r.s]?`<span class="tag${r.swt==='gave'?' gave':''}" style="background:${SH[r.s].c};${fg(r.s)}">${lbl(r.s)}</span>`:''}${r.lead&&SH[r.s]?'<span class="otb">หน.</span>':''}${otTag(r)}${r.note?`<span class="note">${esc(r.note)}</span>`:''}</button>`;
   }
   $("grid").innerHTML=h;updPay();updPicQuick();updWarn(W);updNudge();
   const chip=(l,n,k)=>n?`<span class="chip" style="background:${SH[k].c};${fg(k)}">${l} ${n}</span>`:'';
@@ -592,7 +612,7 @@ function render(){
   $('sum').innerHTML=(chip('เช้า',cnt['-'],'-')+chip('บ่าย',cnt['X'],'X')+chip('ดึก',cnt['O'],'O')+chip('หยุด',off,'Su')+chip('ลา',cnt['V'],'V')+chip('ลากิจ',cnt['LK'],'LK')+chip('ลาป่วย',cnt['LS'],'LS')+chip('ลาคลอด',cnt['ML'],'ML')+chip('ลาบวช',cnt['LB'],'LB')+chip('ดูแลภรรยา',cnt['LW'],'LW')+COMBO.map(k=>chip(k,cnt[k],k)).join(''))||'<span class="hint">ยังไม่มีเวรในเดือนนี้</span>';
 }
 function drawSheet(){
-  $('opts').innerHTML=Object.entries(SH).map(([k,v])=>`<button data-s="${k}" class="${sel===k?'sel':''}" style="background:${v.c};${v.t?'color:'+v.t:''}">${k}<small>${v.d}</small></button>`).join('')+`<button data-s="" style="background:#6b7c7a">ลบเวร</button>`;
+  $('opts').innerHTML=Object.entries(SH).map(([k,v])=>`<button data-s="${k}" class="${sel===k?'sel':''}" style="background:${v.c};${v.t?'color:'+v.t:''}">${lbl(k)}<small>${v.d}</small></button>`).join('')+`<button data-s="" style="background:#6b7c7a">ลบเวร</button>`;
   {let lc='';$('stks').innerHTML=`<button class="none${stk?'':' sel'}" data-e="">ไม่มี</button>`+ST.map(([e,a,c])=>{const h=(c&&c!==lc)?(lc=c,`<div class="cat">${c}</div>`):'';return h+`<button data-e="${e}" class="${stk===e?'sel':''}"><span class="a-${a}" style="display:inline-block">${e}</span></button>`}).join('')}
   const hn=(HOLI[pick]||(calOn(pick)&&calHol[pick])?`(${holName(pick)})`:'')+(isSpc(pick,data[pick]||{})?' ★ วันหยุดพิเศษ':'');$('hdInfo').textContent=hn;
   $('tpSeg').innerHTML=[[0,'ตามเดือน/ค่าหลัก ('+patName(tpOf(pick,null))+')'],[1,'แบบ 1'],[2,'แบบ 2'],[3,'แบบ 3 · กำหนดเอง']].map(([v,l])=>`<button class="sg${tp===v?' sel':''}" data-t="${v}">${l}</button>`).join('');
@@ -678,6 +698,9 @@ Object.keys(PC7).forEach(k=>{SH[k].c=PC7[k];if(DK7.includes(k))SH[k].t='#2a2000'
 ['Su','Sa','M','T','W','Th','F'].forEach(k=>SH[k].t='#38506a');
 SH['LK']={c:'#89a9ca',t:'#10263d',d:'ลากิจ'};SH['LS']={c:'#c95c54',d:'ลาป่วย'};
 SH['ML']={c:'#d78bb4',t:'#3a1030',d:'ลาคลอด'};SH['LB']={c:'#e3a85a',t:'#3a2200',d:'ลาบวช'};SH['LW']={c:'#8f88c8',d:'ลาดูแลภรรยาหลังคลอด'};
+/* ตัวย่อที่แสดง (รหัสภายในยังเป็น LK/LS/LB/ML/LW เพื่อไม่ให้ข้อมูลเดิมเสีย) */
+const SHL={LK:'BL',LS:'SL',LB:'OL',ML:'ML',LW:'PL'};
+const lbl=k=>SHL[k]||k;
 /* ---------- OT + pay ---------- */
 let ot={m:0,e:0,n:0};
 function drawOt(){$('otLbl').style.display=$('ot').style.display=opt.showOT?'':'none';const on=ot.m+ot.e+ot.n>0;$('ot').innerHTML=`<label class="rr" style="width:100%"><input type="checkbox" id="otOn" ${on?'checked':''}><span>เพิ่ม OT (ตั้งต้นเป็น OT เช้า)</span></label>`+(on?[['m','OT เช้า'],['e','OT บ่าย'],['n','OT ดึก']].map(([k,l])=>`<div class="otc">${l}<br><button data-o="${k}" data-d="-1">−</button><b>${ot[k]}</b><button data-o="${k}" data-d="1">+</button></div>`).join(''):'')}
@@ -785,7 +808,7 @@ function drawSwaps(){
  $('swOpen').checked=swOnly;
  const rows=swOnly?all.filter(k=>!data[k].swd&&data[k].swt!=='swap'):all;
  $('swList').innerHTML=rows.length?rows.map(k=>{const r=data[k],[y,m,d]=k.split('-').map(Number);
-  return `<div class="card" data-k="${k}" style="display:flex;gap:8px;align-items:center;cursor:pointer"><div style="flex:1"><b>${d} ${TH_M[m-1]} ${y+543} ${r.s||''}</b><span>${SWL[r.swt]||''}${r.swp?' · '+esc(r.swp):''}</span>`
+  return `<div class="card" data-k="${k}" style="display:flex;gap:8px;align-items:center;cursor:pointer"><div style="flex:1"><b>${d} ${TH_M[m-1]} ${y+543} ${r.s?lbl(r.s):''}</b><span>${SWL[r.swt]||''}${r.swp?' · '+esc(r.swp):''}</span>`
    +(r.swt!=='swap'&&r.swa>0?`<br><small>${r.swt==='cover'?'ต้องได้รับ ':'ต้องจ่าย '}${fm(+r.swa)} บาท</small>`:'')+(r.note?`<br><small>${esc(r.note)}</small>`:'')+`</div>`
    +(r.swt!=='swap'?`<label style="text-align:center;font-size:11px"><input type="checkbox" data-s="${k}" ${r.swd?'checked':''}><br>${r.swd?'จ่ายคืนแล้ว':'ยังไม่จ่าย'}</label>`:'')+`</div>`}).join(''):'<p class="hint">ยังไม่มีรายการ</p>'}
 $('swOpen').onchange=e=>{swOnly=e.target.checked;drawSwaps()};
@@ -825,9 +848,9 @@ async function drawPics(){const ym=mKey();$('pTitle').textContent=`${TH_M[cur.ge
  let L=[];try{L=await picList(ym)}catch(e){$('pMsg').textContent='เบราว์เซอร์นี้ไม่รองรับการเก็บภาพในแอพ';return}
  picUrls.forEach(u=>URL.revokeObjectURL(u));picUrls=[];
  $('pGrid').innerHTML=L.map(p=>{const u=URL.createObjectURL(p.blob);picUrls.push(u);return `<button data-id="${p.id}"><img src="${u}" alt="${esc(p.cap||'ภาพเวร')}"></button>`}).join('');
- $('pMsg').textContent=L.length?`${L.length} ภาพ · แตะเพื่อดู ขยาย แชร์ หรือลบ`:'ยังไม่มีภาพเวรของเดือนนี้';updPicQuick(L.length)}
+ $('pMsg').textContent=L.length?`${L.length} ภาพ · แตะภาพเพื่อแก้ไข (ตัด/หมุน) แชร์ หรือลบ`:'ยังไม่มีภาพเวรของเดือนนี้';updPicQuick(L.length)}
 async function updPicQuick(n){if(n===undefined){try{n=(await picList(mKey())).length}catch(e){n=0}}
- $('picQuick').textContent=n?`📷 ภาพเวรจริงเดือนนี้ (${n} ภาพ) แตะเพื่อดู`:'📷 ถ่ายภาพ/เพิ่มภาพเวรจริงของเดือนนี้'}
+ $('picQuick').textContent=n?`📷 ภาพเวรจริงเดือนนี้ (${n} ภาพ) แตะเพื่อดู`:'📷 ภาพเวรจริงเดือนนี้ (ยังไม่มีภาพ)'}
 async function addPics(files){const ym=mKey();let ok=0,bad=[];
  for(const f of files){try{let blob=await shrink(f);if(files.length===1){try{const eb=await editPhoto(blob,'ข้าม (ใช้ภาพเดิม)');if(eb)blob=eb}catch(x){}}await ptx('readwrite',s=>s.add({ym,t:Date.now()+ok,cap:'',blob}));ok++}catch(e){bad.push(e.message||String(e))}}
  if(bad.length)alert('เพิ่มภาพไม่สำเร็จ '+bad.length+' ภาพ: '+bad[0]);
@@ -869,7 +892,29 @@ $('fCam').onchange=async e=>{const el=e.target,f=[...el.files];if(f.length)await
 $('fPick').onchange=async e=>{const el=e.target,f=[...el.files];if(f.length)await addPics(f);el.value=''};
 $('pPrev').onclick=()=>{cur.setMonth(cur.getMonth()-1);render();drawPics()};
 $('pNext').onclick=()=>{cur.setMonth(cur.getMonth()+1);render();drawPics()};
-$('picQuick').onclick=()=>showTab('pics');
+
+/* ---------- ดูภาพเวรจริง (ดูอย่างเดียว): ภาพใหญ่ด้านบน ภาพเล็กด้านล่าง ---------- */
+let galL=[],galU=[],galI=0;
+function galShow(i){galI=i;const p=galL[i];if(!p)return;$('galImg').src=galU[i];$('galBig').classList.remove('zoom');
+ $('galCap').textContent=(p.cap||'')+(galL.length>1?(p.cap?' · ':'')+(i+1)+'/'+galL.length:'');
+ [...$('galThumbs').children].forEach((b,k)=>b.classList.toggle('sel',k===i));
+ const sel=$('galThumbs').children[i];if(sel&&sel.scrollIntoView)try{sel.scrollIntoView({inline:'center',block:'nearest'})}catch(e){}}
+async function galLoad(){$('galTitle').textContent=`${TH_M[cur.getMonth()]} ${cur.getFullYear()+543}`;
+ galU.forEach(u=>URL.revokeObjectURL(u));galU=[];galL=[];
+ try{galL=await picList(mKey())}catch(e){galL=[]}
+ galU=galL.map(p=>URL.createObjectURL(p.blob));
+ const has=galL.length>0;$('galBig').style.display=has?'':'none';$('galCap').style.display=has?'':'none';$('galThumbs').style.display=has?'':'none';$('galEmpty').hidden=has;
+ $('galThumbs').innerHTML=galL.map((p,i)=>`<button data-i="${i}"><img src="${galU[i]}" alt=""></button>`).join('');
+ if(has)galShow(Math.min(galI,galL.length-1))}
+async function openGal(){galI=0;$('gal').classList.add('open');await galLoad()}
+function closeGal(){$('gal').classList.remove('open');galU.forEach(u=>URL.revokeObjectURL(u));galU=[];galL=[];$('galImg').removeAttribute('src')}
+$('galThumbs').onclick=e=>{const b=e.target.closest('button[data-i]');if(b)galShow(+b.dataset.i)};
+$('galBig').onclick=()=>$('galBig').classList.toggle('zoom');
+$('galClose').onclick=closeGal;
+$('galGo').onclick=()=>{closeGal();showTab('pics')};
+$('galPrev').onclick=()=>{cur.setMonth(cur.getMonth()-1);render();galI=0;galLoad()};
+$('galNext').onclick=()=>{cur.setMonth(cur.getMonth()+1);render();galI=0;galLoad()};
+$('picQuick').onclick=openGal;
 $('pGrid').onclick=async e=>{const b=e.target.closest('button[data-id]');if(!b)return;
  const p=await ptx('readonly',s=>s.get(+b.dataset.id));if(!p)return;picOpen=p;
  const u=URL.createObjectURL(p.blob);$('pvImg').classList.remove('zoom');$('pvImg').innerHTML=`<img src="${u}" alt="">`;$('pvImg').dataset.u=u;$('pvCap').value=p.cap||'';$('pv').classList.add('open')};
@@ -1042,8 +1087,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('[data-save]'))return
 function textTable(){const y=cur.getFullYear(),m=cur.getMonth(),n=new Date(y,m+1,0).getDate(),L=[`ตารางเวร ${TH_M[m]} ${y+543}`+(opt.shareName.trim()?' — '+opt.shareName.trim():'')],c={};
  for(let d=1;d<=n;d++){const k=key(y,m,d),r=data[k];if(!r||!(r.s||r.otm||r.ote||r.otn))continue;
   if(r.s)c[r.s]=(c[r.s]||0)+1;
-  L.push(`${d} ${DOW[new Date(y,m,d).getDay()]} ${r.s||''}${r.lead?' หน.':''}${opt.showOT&&(r.otm||r.ote||r.otn)?' OT'+(r.otm?'ช':'')+(r.ote?'บ':'')+(r.otn?'ด':''):''}${r.swt?' ⇄'+(r.swp||SWL[r.swt]):''}${holName(k)?' 🎌'+holName(k):''}${r.note?' ('+r.note+')':''}`)}
- L.push('');L.push('สรุป: '+(Object.entries(c).map(([k,v])=>`${k} ${v}`).join(' · ')||'ไม่มีเวร'));return L.join('\n')}
+  L.push(`${d} ${DOW[new Date(y,m,d).getDay()]} ${r.s?lbl(r.s):''}${r.lead?' หน.':''}${opt.showOT&&(r.otm||r.ote||r.otn)?' OT'+(r.otm?'ช':'')+(r.ote?'บ':'')+(r.otn?'ด':''):''}${r.swt?' ⇄'+(r.swp||SWL[r.swt]):''}${holName(k)?' 🎌'+holName(k):''}${r.note?' ('+r.note+')':''}`)}
+ L.push('');L.push('สรุป: '+(Object.entries(c).map(([k,v])=>`${lbl(k)} ${v}`).join(' · ')||'ไม่มีเวร'));return L.join('\n')}
 $('shCopy').onclick=async()=>{const t=textTable();try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove()}toast('คัดลอกแล้ว วางในไลน์ได้เลย')};
 /* ---------- Export: ปฏิทิน .ics ---------- */
 const icsEsc=t=>String(t).replace(/\\/g,'\\\\').replace(/[;,]/g,m=>'\\'+m).replace(/\r?\n/g,'\\n');
@@ -1073,7 +1118,7 @@ const csvc=v=>{v=String(v??'');return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""'
 function buildCsv(){const rows=monthRows(),P=calcPay(),c=P.c;let tsp=0,top=0,a=0,b=0,e=0;
  const L=['วันที่,วัน,เวร,ชื่อเวร,วันหยุด,OT เช้า,OT บ่าย,OT ดึก,ค่าเวร,ค่า OT,รวม,สลับเวร,คู่สลับ,ยอดสลับ,สถานะจ่ายคืน,โน้ต'];
  rows.forEach(({k,dow,r,x})=>{tsp+=x.sp;top+=x.op;a+=r.otm||0;b+=r.ote||0;e+=r.otn||0;
-  L.push([k,dow,r.s||'',r.s&&SH[r.s]?SH[r.s].d:'',x.hol?(holName(k)||(x.spc?'วันหยุดพิเศษ':'วันหยุด')):'',r.otm||0,r.ote||0,r.otn||0,x.sp,x.op,x.sp+x.op,SWE(r),r.swp||'',r.swa>0?r.swa:'',(r.swt==='cover'||r.swt==='gave')?(r.swd?'จ่ายคืนแล้ว':'ยังไม่จ่ายคืน'):'',(r.lead?'หัวหน้าเวร ':'')+(r.note||'')].map(csvc).join(','))});
+  L.push([k,dow,r.s?lbl(r.s):'',r.s&&SH[r.s]?SH[r.s].d:'',x.hol?(holName(k)||(x.spc?'วันหยุดพิเศษ':'วันหยุด')):'',r.otm||0,r.ote||0,r.otn||0,x.sp,x.op,x.sp+x.op,SWE(r),r.swp||'',r.swa>0?r.swa:'',(r.swt==='cover'||r.swt==='gave')?(r.swd?'จ่ายคืนแล้ว':'ยังไม่จ่ายคืน'):'',(r.lead?'หัวหน้าเวร ':'')+(r.note||'')].map(csvc).join(','))});
  L.push(['รวม','','','','',a,b,e,tsp,top,tsp+top,'','','','',''].map(csvc).join(','));L.push('');
  const ln=(x,y)=>L.push(csvc(x)+','+csvc(y));
  ln('สรุปเดือน',TH_M[cur.getMonth()]+' '+(cur.getFullYear()+543));
@@ -1087,7 +1132,7 @@ $('shPdf').onclick=()=>{if(isIOS&&navigator.standalone)toast('ถ้าไม่
  <p>เวรปกติ: เช้า ${c.m} บ่าย ${c.e} ดึก ${c.n} · เวรวันหยุด: เช้า ${c.hm} บ่าย ${c.he} ดึก ${c.hn}<br>OT ปกติ: เช้า ${c.om} บ่าย ${c.oe} ดึก ${c.on} · OT วันหยุด: เช้า ${c.hom} บ่าย ${c.hoe} ดึก ${c.hon}<br><b>รวมเงินเวร ${fm(P.sp)} · รวมเงิน OT ${fm(P.op)} · รวมทั้งหมด ${fm(P.sp+P.op)} บาท</b></p>
  <table><tr><th>วัน</th><th>เวร</th><th>วันหยุด / OT</th><th>ค่าเวร</th><th>ค่า OT</th><th>สลับเวร</th><th>โน้ต</th></tr>`
  +rows.map(({k,d,dow,r,x})=>{const ot=(r.otm?'OT ช'+r.otm+' ':'')+(r.ote?'บ'+r.ote+' ':'')+(r.otn?'ด'+r.otn:'');
-  return `<tr><td>${d} ${dow}</td><td>${h(r.s||'')}</td><td>${h((x.hol?(holName(k)||(x.spc?'วันหยุดพิเศษ':'หยุด')):'')+' '+ot)}</td><td>${fm(x.sp)}</td><td>${fm(x.op)}</td><td>${h(SWE(r)+(r.swp?' '+r.swp:'')+(r.swa>0?' '+fm(+r.swa):'')+((r.swt==='cover'||r.swt==='gave')?(r.swd?' ✓':' (ค้าง)'):''))}</td><td>${h((r.lead?'หัวหน้าเวร ':'')+(r.note||''))}</td></tr>`}).join('')
+  return `<tr><td>${d} ${dow}</td><td>${h(r.s?lbl(r.s):'')}</td><td>${h((x.hol?(holName(k)||(x.spc?'วันหยุดพิเศษ':'หยุด')):'')+' '+ot)}</td><td>${fm(x.sp)}</td><td>${fm(x.op)}</td><td>${h(SWE(r)+(r.swp?' '+r.swp:'')+(r.swa>0?' '+fm(+r.swa):'')+((r.swt==='cover'||r.swt==='gave')?(r.swd?' ✓':' (ค้าง)'):''))}</td><td>${h((r.lead?'หัวหน้าเวร ':'')+(r.note||''))}</td></tr>`}).join('')
  +`</table><p style="margin-top:8px;color:#555">สร้างจากแอพตารางเวร ใช้เทียบกับสลิปเงินเดือนเท่านั้น ไม่ใช่เอกสารทางการ · เลือก "บันทึกเป็น PDF" ในหน้าต่างพิมพ์</p>`;
  window.print()};
 function buildImage(){const y=cur.getFullYear(),m=cur.getMonth(),W=1080,mg=30,gp=8,cw=(W-2*mg-6*gp)/7,ch=176,first=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),rows=Math.ceil((first+n)/7);
@@ -1105,7 +1150,7 @@ function buildImage(){const y=cur.getFullYear(),m=cur.getMonth(),W=1080,mg=30,gp
   if(hol&&holName(k)){c.font=`400 16px ${F}`;c.fillStyle=red;c.fillText(clip(holName(k),cw-12),x+10,yy+50);cy=yy+56}
   if(r.st){c.font=`28px ${F}`;c.textAlign='right';c.fillStyle='#000';c.fillText(r.st,x+cw-8,yy+34);c.textAlign='left'}
   if(r.s&&SH[r.s]){cnt[r.s]=(cnt[r.s]||0)+1;const gv=r.swt==='gave';c.globalAlpha=gv?.45:1;rr(x+8,cy,cw-16,36,18);c.fillStyle=SH[r.s].c;c.fill();
-   c.fillStyle=SH[r.s].t||'#fff';c.font=`700 24px ${F}`;c.textAlign='center';c.fillText(r.s,x+cw/2,cy+26);
+   c.fillStyle=SH[r.s].t||'#fff';c.font=`700 24px ${F}`;c.textAlign='center';c.fillText(lbl(r.s),x+cw/2,cy+26);
    if(gv){const tw=c.measureText(r.s).width;c.strokeStyle=c.fillStyle;c.lineWidth=3;c.beginPath();c.moveTo(x+cw/2-tw/2,cy+18);c.lineTo(x+cw/2+tw/2,cy+18);c.stroke()}
    c.globalAlpha=1;c.textAlign='left';cy+=42}
   if(opt.showOT&&(r.otm||r.ote||r.otn)){c.font=`700 19px ${F}`;c.fillStyle='#a9761a';c.fillText('OT '+(r.otm?'ช':'')+(r.ote?'บ':'')+(r.otn?'ด':''),x+10,cy+14);cy+=20}
