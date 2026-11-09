@@ -389,6 +389,11 @@ input,select,textarea{font-size:16px!important}
 #galThumbs button{flex:0 0 64px;width:64px;height:64px;border-radius:10px;overflow:hidden;padding:0;border:2px solid transparent;background:#222;opacity:.7}
 #galThumbs button.sel{border-color:#e5a019;opacity:1}
 #galThumbs img{width:100%;height:100%;object-fit:cover;display:block}
+#updBar{position:fixed;left:12px;right:12px;bottom:calc(96px + env(safe-area-inset-bottom,0px));max-width:520px;margin:0 auto;z-index:92;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:16px;background:#16324a;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+#updBar[hidden]{display:none}
+#updBar span{flex:1;font-weight:700}
+#updBar button{padding:8px 12px;border-radius:12px;background:#2a4a68;color:#fff;font-weight:600}
+#updBar #updNow{background:#2c7a4b}
 /* v1.18 วันนี้: ไม่ใช้กรอบสีส้ม ใช้วงกลมน้ำเงินที่เลขวันแทน */
 .cell.today{outline:0!important;background:var(--surface);box-shadow:var(--shadow,none)!important}
 .cell.today .num{display:inline-block;min-width:20px;padding:0 5px;border-radius:10px;background:#23497e;color:#fff!important;text-align:center;font-weight:700}
@@ -477,6 +482,7 @@ input,select,textarea{font-size:16px!important}
   <div class="pgrid" id="pGrid"></div>
   <p class="hint" id="pMsg"></p>
 </div>
+<div id="updBar" hidden><span>🔄 มีเวอร์ชันใหม่</span><button id="updNow">อัปเดตเลย</button><button id="updLater">ไว้ก่อน</button></div>
 <div id="gal"><div id="galTop"><button id="galPrev">‹</button><b id="galTitle"></b><button id="galNext">›</button><button id="galClose">ปิด</button></div>
 <div id="galBig"><img id="galImg" alt=""></div><div id="galCap"></div>
 <div id="galEmpty" hidden>ยังไม่มีภาพเวรของเดือนนี้<br><button id="galGo">📷 ไปถ่ายภาพ / เพิ่มภาพ</button></div>
@@ -516,7 +522,10 @@ input,select,textarea{font-size:16px!important}
   <label class="rr"><input type="checkbox" id="optPay"><span>แสดงเงินเวร</span></label>
   <label class="rr"><input type="checkbox" id="optOT"><span>แสดง OT (ปุ่ม OT ในหน้าลงเวร ป้าย OT และเงิน OT)</span></label>
   <div class="lbl">ผู้พัฒนาแอพพลิเคชั่น</div>
-  <div class="devcard"><div class="avatar">DK</div><div><b>DK.Tan Namwong</b><span>ผู้พัฒนาแอพพลิเคชั่น · เวอร์ชัน 1.9</span></div></div>
+  <div class="lbl">อัปเดตแอพ</div>
+  <div class="tools"><button id="updChk">🔄 ตรวจสอบเวอร์ชันใหม่</button><button id="updForce">♻️ ล้างแคชและโหลดใหม่</button></div>
+  <p class="hint" id="updMsg">เวอร์ชันที่ใช้อยู่ 1.27 · อัปเดตไม่ลบข้อมูลเวร อัตราค่าเวร และภาพ</p>
+  <div class="devcard"><div class="avatar">DK</div><div><b>DK.Tan Namwong</b><span>ผู้พัฒนาแอพพลิเคชั่น · เวอร์ชัน <span id="appVer">1.27</span></span></div></div>
   <div class="sbar"><button data-save>💾 บันทึกการตั้งค่า</button></div>
 </div>
 <div class="sheet" id="hcm" role="dialog"><h2 id="hcmT"></h2><p class="hint" id="hcmH"></p><div id="hcmL" style="max-height:46vh;overflow:auto"></div><div class="row"><button id="hcmX">ยกเลิก</button><button class="ok" id="hcmGo">นำเข้า</button></div></div>
@@ -612,7 +621,7 @@ function render(){
   $('sum').innerHTML=(chip('เช้า',cnt['-'],'-')+chip('บ่าย',cnt['X'],'X')+chip('ดึก',cnt['O'],'O')+chip('หยุด',off,'Su')+chip('ลา',cnt['V'],'V')+chip('ลากิจ',cnt['LK'],'LK')+chip('ลาป่วย',cnt['LS'],'LS')+chip('ลาคลอด',cnt['ML'],'ML')+chip('ลาบวช',cnt['LB'],'LB')+chip('ดูแลภรรยา',cnt['LW'],'LW')+COMBO.map(k=>chip(k,cnt[k],k)).join(''))||'<span class="hint">ยังไม่มีเวรในเดือนนี้</span>';
 }
 function drawSheet(){
-  $('opts').innerHTML=Object.entries(SH).map(([k,v])=>`<button data-s="${k}" class="${sel===k?'sel':''}" style="background:${v.c};${v.t?'color:'+v.t:''}">${lbl(k)}<small>${v.d}</small></button>`).join('')+`<button data-s="" style="background:#6b7c7a">ลบเวร</button>`;
+  $('opts').innerHTML=Object.entries(SH).map(([k,v])=>`<button data-s="${k}" class="${sel===k?'sel':''}" style="background:${v.c};${v.t?'color:'+v.t:''}">${lbl(k)}<small>${v.d}</small></button>`).join('')+`<button data-s="" style="background:#d62828;color:#fff;font-weight:800;box-shadow:0 0 0 2px rgba(214,40,40,.25)">🗑 ลบเวร</button>`;
   {let lc='';$('stks').innerHTML=`<button class="none${stk?'':' sel'}" data-e="">ไม่มี</button>`+ST.map(([e,a,c])=>{const h=(c&&c!==lc)?(lc=c,`<div class="cat">${c}</div>`):'';return h+`<button data-e="${e}" class="${stk===e?'sel':''}"><span class="a-${a}" style="display:inline-block">${e}</span></button>`}).join('')}
   const hn=(HOLI[pick]||(calOn(pick)&&calHol[pick])?`(${holName(pick)})`:'')+(isSpc(pick,data[pick]||{})?' ★ วันหยุดพิเศษ':'');$('hdInfo').textContent=hn;
   $('tpSeg').innerHTML=[[0,'ตามเดือน/ค่าหลัก ('+patName(tpOf(pick,null))+')'],[1,'แบบ 1'],[2,'แบบ 2'],[3,'แบบ 3 · กำหนดเอง']].map(([v,l])=>`<button class="sg${tp===v?' sel':''}" data-t="${v}">${l}</button>`).join('');
@@ -699,6 +708,13 @@ Object.keys(PC7).forEach(k=>{SH[k].c=PC7[k];if(DK7.includes(k))SH[k].t='#2a2000'
 SH['LK']={c:'#89a9ca',t:'#10263d',d:'ลากิจ'};SH['LS']={c:'#c95c54',d:'ลาป่วย'};
 SH['ML']={c:'#d78bb4',t:'#3a1030',d:'ลาคลอด'};SH['LB']={c:'#e3a85a',t:'#3a2200',d:'ลาบวช'};SH['LW']={c:'#8f88c8',d:'ลาดูแลภรรยาหลังคลอด'};
 /* ตัวย่อที่แสดง (รหัสภายในยังเป็น LK/LS/LB/ML/LW เพื่อไม่ให้ข้อมูลเดิมเสีย) */
+/* สีวันหยุดตามสีประจำวัน (อา แดง · จ เหลือง · อ ชมพู · พ เขียว · พฤ ส้ม · ศ ฟ้า · ส ม่วง) เป็นโทนอ่อน ตัวอักษรเข้ม
+   ส่วนเวร/วันลาอื่นใช้โทนเข้มที่ไม่ซ้ำกับสีวัน (แดงสดใช้กับปุ่มลบเวรเท่านั้น) */
+{const NC={
+ Su:['#ff8a80','#5a0a0a'],M:['#fff176','#4a3d00'],T:['#f8a5c8','#5a1033'],W:['#a5d6a7','#12381a'],Th:['#ffb74d','#4a2500'],F:['#81d4fa','#05364d'],Sa:['#ce93d8','#3a0f45'],
+ '-':['#0f766e'],X:['#5a3e2b'],O:['#1e2a5a'],'-/X':['#475569'],'-/O':['#1f2937'],'X/O':['#5b21b6'],
+ V:['#3f6212'],LS:['#0369a1'],ML:['#9d174d'],LB:['#b7791f'],LK:['#a8a29e','#2b2118'],LW:['#7c6f8f']};
+ Object.keys(NC).forEach(k=>{if(!SH[k])return;SH[k].c=NC[k][0];if(NC[k][1])SH[k].t=NC[k][1];else delete SH[k].t})}
 const SHL={LK:'BL',LS:'SL',LB:'OL',ML:'ML',LW:'PL'};
 const lbl=k=>SHL[k]||k;
 /* ---------- OT + pay ---------- */
@@ -1165,7 +1181,29 @@ function buildImage(){const y=cur.getFullYear(),m=cur.getMonth(),W=1080,mg=30,gp
 $('shImg').onclick=async()=>{try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;const cv=buildImage();
  const blob=await new Promise(r=>cv.toBlob(r,'image/png'));await shareBlob(blob,`ตารางเวร-${mKey()}.png`,'แชร์ตารางเวร')}catch(e){alert('สร้างรูปไม่สำเร็จ: '+(e.message||e))}};
 render();updPicQuick();if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+/* ---------- อัปเดตแอพ ---------- */
+let swReg=null;
+function showUpd(){$('updBar').hidden=false}
+$('updNow').onclick=()=>location.reload();
+$('updLater').onclick=()=>{$('updBar').hidden=true};
+function swSetup(){if(!('serviceWorker' in navigator))return;
+ const had=!!navigator.serviceWorker.controller;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)showUpd()});
+ navigator.serviceWorker.register('sw.js').then(r=>{swReg=r;r.update().catch(()=>{});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update().catch(()=>{})})}).catch(()=>{})}
+window.addEventListener('load',swSetup);
+$('updChk').onclick=async()=>{const m=$('updMsg');
+ if(!swReg||!('serviceWorker' in navigator)){m.textContent='เบราว์เซอร์นี้ยังไม่รองรับการอัปเดตอัตโนมัติ ลองปิดแล้วเปิดแอพใหม่';return}
+ m.textContent='กำลังตรวจสอบ…';
+ let found=false;const h=()=>{found=true};navigator.serviceWorker.addEventListener('controllerchange',h);
+ try{await swReg.update();await new Promise(r=>setTimeout(r,2500));
+  m.textContent=(found||!$('updBar').hidden||swReg.installing||swReg.waiting)?'พบเวอร์ชันใหม่แล้ว กดปุ่ม "อัปเดตเลย" ด้านล่างจอ':'เป็นเวอร์ชันล่าสุดแล้ว (1.27) ✓'}
+ catch(e){m.textContent='ตรวจสอบไม่สำเร็จ (ไม่มีสัญญาณอินเทอร์เน็ต?) ลองใหม่ภายหลัง'}
+ finally{navigator.serviceWorker.removeEventListener('controllerchange',h)}};
+$('updForce').onclick=async()=>{const m=$('updMsg');m.textContent='กำลังล้างแคชแอพ…';
+ try{if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}
+  if(navigator.serviceWorker){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}}catch(e){}
+ m.textContent='เสร็จแล้ว กำลังโหลดใหม่… (ข้อมูลเวรไม่หาย)';setTimeout(()=>location.reload(),600)};
 /* ---------- ติดตั้งแอพ (PWA) ---------- */
 (function(){
 const bar=$('inst'),go=$('instGo'),help=$('instHelp'),tx=$('instHelpTx');let dp=null;
